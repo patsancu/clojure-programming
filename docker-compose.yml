@@ -1,0 +1,10 @@
+version: "3.3"
+services:
+  clojure:
+    #container_name: myclojure
+    image: clojure
+    build: .
+    tty: true
+    volumes:
+      - .:/home/code
+
