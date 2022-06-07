@@ -1,4 +1,4 @@
-FROM clojure:openjdk-19-tools-deps-alpine
+FROM clojure:temurin-18-lein-focal
 
 RUN wget https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein && \
     chmod +x lein && \

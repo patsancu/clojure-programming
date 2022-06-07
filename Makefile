@@ -1,5 +1,11 @@
+image = clojure:temurin-18-lein-focal
+
+
+WORKDIR=$(shell pwd)
+DST_DIR="/home/code/programming-clojure-book"
+
 run:
-	docker run -it --rm myclojure bash
+	docker run -it -v $(WORKDIR)/official-book:$(DST_DIR) -v this-m2:/root/.m2 --rm $(image) bash -c "cd $(DST_DIR); lein repl"
 rebuild:
 	docker build -t myclojure .
 
