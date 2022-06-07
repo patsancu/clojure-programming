@@ -1,0 +1,3 @@
+[submodule "official-book"]
+	path = official-book
+	url = https://github.com/stuarthalloway/programming-clojure
