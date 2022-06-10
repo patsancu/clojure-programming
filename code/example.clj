@@ -139,3 +139,119 @@ File/separator
 )
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+; ==============================
+; ==============================
+; My playground
+; ==============================
+; ==============================
+(defn factorial [n]
+  (if (= n 0)
+      1
+      (* n (factorial (- n 1)))
+  )
+)
+
+(defn fibonacci [n]
+  (println "computing number", n)
+  (if (or (= n 1) (= n 0))
+      1
+      (+ (fibonacci (- n 1)) (fibonacci (- n 2)))
+  )
+)
+
+(def memo-fibonacci (memoize fibonacci))
+
+
+(time (memo-fibonacci 10))
+(time (fibonacci 10))
+
+; Copied from da internet
+(defn fibo-recur-java-bigint
+  [^long n]
+  (loop [curr (BigInteger/valueOf 0)
+         next (BigInteger/valueOf 1)
+         n n]
+    (if-not (zero? n)
+      (recur next (.add curr next) (dec n))
+      curr)))
+(def fib-memo fibo-recur-java-bigint)
+(time (fib-memo 1000))
+(time (fib-memo 1000))
