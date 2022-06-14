@@ -217,6 +217,19 @@ Random
 (index-of-any #{\b \y} "zzabyycdxx")
 (index-of-any #{\h \p} "zzabyycdxx")
 
+; Metadata
+
+(defn ^{:tag String} shout [^{:tag String} s]
+  (.toUpperCase s))
+
+; or, more concisely:
+(defn ^String shout [^String s])
+
+(meta #'shout)
+; examples.patrick=> (meta #'shout)
+; {:tag java.lang.String, :arglists ([s]), :line 1, :column 1, :file "/tmp/form-init12562403159401401501.clj", :name shout, :ns #object[clojure.lang.Namespace 0x572ffe02 "examples.patrick"]}
+
+
 
 
 
