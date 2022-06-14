@@ -137,16 +137,85 @@ File/separator
   (:require [clojure.string :as str])
   (:import (java.io File))
 )
+(.exists (File. "/tmp"))
 
 
+; Calling Java
+(def rnd (new java.util.Random))
+(. rnd nextInt)
 
+(. rnd nextInt 120)
 
+(. Math PI)
 
+(import '(java.util Random Locale)
+        '(java.text MessageFormat))
 
+Random
 
+; Flow control
+(defn is-small? [number]
+  (if (< number 100) "yes" (str "no, it's not")))
 
+; Side effects with `do`
+(defn is-small? [number]
+  (if (< number 100)
+    "yes"
+    (do
+      (println "Saw a big number" number)
+      "no")
+  ))
 
+(loop [result [] x 5]
+  (if (zero? x)
+    result
+    (recur (conj result x) (dec x))))
 
+(defn countdown [result x]
+  (if (zero? x)
+    result
+    (recur (conj result x) (dec x))))
+(countdown [] 10)
+
+(into [] (take 5 (iterate dec 5)) )
+
+(into [] (drop-last (reverse (range 6))) )
+
+(vec (reverse (rest (range 10))))
+
+; Where's the `for` loop
+
+; public static int indexOfAny(String str, char[] searchChars) {
+;   if (isEmpty(str) || ArrayUtils.isEmpty(searchChars)) {
+;     return -1;
+;   }
+;   for (int i = 0; i < str.length(); i++) {
+;     char ch = str.charAt(i);
+;     for (int j = 0; j < searchChars.length; j++) {
+;       if (searchChars[j] == ch) {
+;         return i;
+;       }
+;     }
+;   }
+;   return -1;
+; }
+
+(defn indexed [coll] (map-indexed vector coll))
+(indexed "abcde")
+
+(defn index-filter [pred coll]
+  (when pred
+    (for [[idx elt] (indexed coll) :when (pred elt)] idx)))
+(index-filter #{\a \b} "abcdbbb")
+(index-filter #{\a \b} "xyz")
+
+(defn index-of-any [pred coll]
+  (first (index-filter pred coll))
+)
+
+(index-of-any #{\z \a} "zzabyycdxx")
+(index-of-any #{\b \y} "zzabyycdxx")
+(index-of-any #{\h \p} "zzabyycdxx")
 
 
 
