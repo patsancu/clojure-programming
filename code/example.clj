@@ -235,14 +235,64 @@ Random
 
 
 
+; ====================
+; Chapter 3: Sequences
+; ====================
+(def aseq [1 2 3])
+
+(type aseq)
+(class aseq)
+(first aseq)
+(rest aseq)
+(class (rest aseq))
+
+(cons 7 aseq)
+; (7 1 2 3)
+
+(class aseq)
+(class (seq aseq))
+
+(next aseq)
+
+(first {:fname "John" :flast "Wayne"})
+;[:fname "John"]
+(rest {:fname "John" :flast "Wayne"})
+;([:flast "Wayne"])
+(cons [:mname "MF"] {:fname "John" :flast "Wayne"})
+
+; also for sets
+(rest #{:the :quick :brown :fox})
+;(:the :quick :brown)
+(first #{:the :quick :brown :fox})
+;:fox
+(cons :jumped #{:the :quick :brown :fox})
+;(:jumped :fox :the :quick :brown)
+
+(conj '(1 2 3) :a)
+;(:a 1 2 3)
+(into '(1 2 3) '(:a :b))
+;(:b :a 1 2 3)
+(into '(1 2 3) [9 99 999])
+;(999 99 9 1 2 3)
 
 
+(repeat 10 "x")
+;("x" "x" "x" "x" "x" "x" "x" "x" "x" "x")
 
+; DON'T RUN ALONE! HANGS
+; (iterate inc 1)
+; iterate begins with a value x and continues forever, applying a function f to each value to calculate the next.
+(take 200 (iterate inc 1))
 
+(take 5 (iterate #(+ 3 %1) 5))
 
+; Powers of two
+(take 20 (iterate #(* 2 %1) 2))
 
+; Odd numbers
+(take 20 (iterate #(+ 2 %1) 1))
 
-
+(take 10 (iterate #(str "a" %1) ""))
 
 
 
