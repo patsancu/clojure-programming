@@ -337,3 +337,38 @@ Random
 (def fib-memo fibo-recur-java-bigint)
 (time (fib-memo 1000))
 (time (fib-memo 1000))
+
+
+; List comprehensions
+(for [x (range 1 10)
+      :let [ y (square x) ]
+      :when (odd? x) ]
+  y)
+
+;   cartesian product
+(for [x [1 2 3 4 5]
+      y ["a" "b" "c" "d"]]
+    [x y]
+)
+; ([1 "a"] [1 "b"] [1 "c"] [1 "d"] [2 "a"] [2 "b"] [2 "c"] [2 "d"] [3 "a"] [3 "b"] [3 "c"] [3 "d"] [4 "a"] [4 "b"] [4 "c"] [4 "d"] [5 "a"] [5 "b"] [5 "c"] [5 "d"])
+
+; Foobar
+(defn aux [x]
+  (if (= 0 (mod x 5))
+    (if (= 0 (mod x 3))
+      "foobar"
+      "bar"
+    )
+    (if (= 0 (mod x 3))
+      "foo"
+      x
+    )
+    )
+)
+
+(defn foobar [limit]
+  (for [i (range 1, limit)
+    :let [x (aux i)]]
+  x
+)
+)
