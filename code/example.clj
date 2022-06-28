@@ -294,33 +294,119 @@ Random
 
 (take 10 (iterate #(str "a" %1) ""))
 
+(take 7 (cycle (range 3)))
+
+(def whole-numbers (iterate inc 1))
+
+(take 9 whole-numbers )
+; (1 2 3 4 5 6 7 8 9)
+
+
+; clojure.core/interleave
+; ([] [c1] [c1 c2] [c1 c2 & colls])
+; Returns a lazy seq of the first item in each coll, then the second etc.
+(interleave whole-numbers ["A" "B" "C" "D" "E"])
+; (1 "A" 2 "B" 3 "C" 4 "D" 5 "E")
+
+
+; clojure.core/interpose
+; ([sep] [sep coll])
+; Returns a lazy seq of the elements of coll separated by sep.
+; Returns a stateful transducer when no collection is provided.
+(interpose "," ["apples", "bananas", "grapes"])
+; ("apples" "," "bananas" "," "grapes")
+
+
+(def vowel? #{\a\e\i\o\u})
+(def consonant? (complement vowel))
+
+; Sets act as functions that look up a value in the set and return either the value or nil if not found
+(take-while consonant? "the-quick-brown-fox" )
+; (\t \h)
+
+(drop-while consonant? "the-quick-brown-fox")
+; (\e \- \q \u \i \c \k \- \b \r \o \w \n \- \f \o \x)
+
+
+(split-with #(<= % 10) (range 10))
+; [(0 1 2 3 4 5 6 7 8 9) ()]
+
+
+; clojure.core/split-with
+; ([pred coll])
+  ; Returns a vector of [(take-while pred coll) (drop-while pred coll)]
+(split-with #(<= % 10) (range 0 20 2))
+; [(0 2 4 6 8 10) (12 14 16 18)]
+
+; #### Sequence predicates
+
+(every? odd? [1 3 5])
+; true
+
+(some odd? [1 2 3 4])
+; true
+
+(some even? [1 3 5])
+; nil
+
+; NOTE: `some` has NO question mark, it's not a predicate
+(some identity [nil false 1 nil 2])
+; 1
+
+; Linear search to check if a sequence contains a matching element
+(some #{3} (range 20))
+; 3
+
+(not-every? even? whole-numbers)
+; true
+
+(not-any? even? whole-numbers)
+; false
 
 
 
+; #### Transforming sequences
+(map #(format "<p>%s</p>" %) ["the" "quick" "brown" "fox"])
+; ("<p>the</p>" "<p>quick</p>" "<p>brown</p>" "<p>fox</p>")
+
+; If more than one collection is supplied, map will apply with one arguemnent from each collection
+(map #(format "<%s>%s</%s>" %1 %2 %1) ["h1" "h2" "h3" "h1"] ["the" "quick" "brown" "fox"])
+; ("<h1>the</h1>" "<h2>quick</h2>" "<h3>brown</h3>" "<h1>fox</h1>")
+
+(reduce + (range 1 11))
+; 55
 
 
+(reduce * (range 1 11))
+; 3628800
+
+(sort [42 1 7 11])
+
+(sort-by #(.toString %) [42 1 7 11])
+; (1 11 42 7)
+
+; Specify an optional comparison function (>)
+(sort > [42 1 7 11])
+; (42 11 7 1)
+
+(sort-by :grade > [{:grade 83} {:grade 90} {:grade 77}])
+; ({:grade 90} {:grade 83} {:grade 77})
 
 
+(for [word ["the" "quick" "brown" "fox"]]
+  (format "<p>%s</p>" word))
+
+(take 10 (for [n (whole-numbers) :when (even? n)] n))
 
 
+; Written like this in the book
+; DOESN'T WORK! (take 10 (for [n (whole-numbers) :when (even? n)] n))
 
 
+(take 10 (for [n whole-numbers :when (even? n)] n))
+; (2 4 6 8 10 12 14 16 18 20)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+(for [file "ABCDEFGH" rank (range 9)] (format "%c%d" file rank))
 
 
 
