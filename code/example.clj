@@ -281,6 +281,7 @@ Random
 
 ; DON'T RUN ALONE! HANGS
 ; (iterate inc 1)
+; Returns a lazy sequence of x, (f x), (f (f x)) etc. f must be free of side-effects
 ; iterate begins with a value x and continues forever, applying a function f to each value to calculate the next.
 (take 200 (iterate inc 1))
 
@@ -408,6 +409,153 @@ Random
 
 (for [file "ABCDEFGH" rank (range 9)] (format "%c%d" file rank))
 
+;; clojure makes java seq-able
+
+; in java:
+; ```
+; jshell> "hello".getBytes()
+; $3 ==> byte[5] { 104, 101, 108, 108, 111 }
+; ```
+
+(first (.getBytes "hello"))
+; 104
+(rest (.getBytes "hello"))
+; (101 108 108 111)
+(cons (int \h) (.getBytes "ello"))
+; (104 101 108 108 111)
+
+; also works for hastables and maps
+(first (System/getProperties))
+(rest (System/getProperties))
+
+(for [property (System/getProperties)]
+(do (prn property) property)
+
+(first "Hello")
+(get "Hello" 4)
+(rest "Hello")
+(apply str (rest "Hello"))
+(cons \h "ello")
+(cons \h (rest "Hello"))
+
+; ##### seq-ing regular expressions
+(re-seq #"\w+" "the quick brown fox")
+; ("the" "quick" "brown" "fox")
+(sort (re-seq #"\w+" "the quick brown fox"))
+; ("brown" "fox" "quick" "the")
+
+(drop 2 (re-seq #"\w+" "the quick brown fox"))
+; ("brown" "fox")
+
+(map #(.toUpperCase %1) (re-seq #"\w+" "the quick brown fox"))
+; ("THE" "QUICK" "BROWN" "FOX")
+
+; ##### seq-ing the file system
+(import '(java.io File))
+
+(.listFiles (File. "."))
+; Only toString, boring!
+; #object["[Ljava.io.File;" 0x5990403d "[Ljava.io.File;@5990403d"]
+
+(seq (.listFiles (File. ".")))
+; (#object[java.io.File 0x680a555d "./official-book"])
+
+; Much nicer
+(map #(.getName %) (seq (.listFiles (File. "."))))
+; ("official-book")
+; Same result, no need to call seq if calling map
+(map #(.getName %) (.listFiles (File. ".")))
+
+(count (file-seq (File. ".")))
+; 22
+(map #(.getName %) (file-seq (File. ".")))
+
+(map #(.getName %) (file-seq (File. ".")))
+; ("." "a13.txt" "a9.txt" "a1.txt" "a14.txt" "a7.txt" "a20.txt" "a4.txt" "a2.txt" "a16.txt" "official-book" "a3.txt" "a17.txt" "a6.txt" "a5.txt" "a10.txt" "a12.txt" "a11.txt" "a19.txt" "a8.txt" "a18.txt" "a15.txt")
+
+; Find files modified less than a half hour ago
+(defn minutes-to-millis [mins] (* mins 1000 60))
+
+(defn recently-modified? [file]
+  (> (.lastModified file)
+    (- (System/currentTimeMillis) (minutes-to-millis 30))
+))
+
+(map #(.getName %) (filter recently-modified? (file-seq (File. "."))))
+; ("." "a13.txt" "a9.txt" "a1.txt" "a14.txt" "a7.txt" "a20.txt" "a4.txt" "a2.txt" "a16.txt" "a3.txt" "a17.txt" "a6.txt" "a5.txt" "a10.txt" "a12.txt" "a11.txt" "a19.txt" "a8.txt" "a18.txt" "a15.txt")
+
+; ##### seq-ing a stream
+(use '[clojure.java.io :only (reader) ]) ; WARNING: Leaves the reader open
+
+; print first two lines of "a10.txt"
+(doseq [line (take 2 (line-seq (reader "a10.txt")))]
+  (prn line)
+)
+
+
+; print all content, per line, of "a10.txt"
+(with-open [rdr (reader "a10.txt")]
+  (doseq [line (line-seq rdr)] (prn line) ))
+; "total 12"
+; "drwxr-xr-x 3 root root 4096 Jun 29 15:19 ."
+; "drwxr-xr-x 3 root root 4096 Jun 29 13:54 .."
+; "-rw-r--r-- 1 root root    0 Jun 29 16:09 a10.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a11.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a12.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a13.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a14.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a15.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a16.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a17.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a18.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a19.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a1.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a20.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a2.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a3.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a4.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a5.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a6.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a7.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a8.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a9.txt"
+; "drwxr-xr-x 2 root root 4096 Jun 22 12:10 official-book"
+; ""
+; ""
+; "/home/code/programming-clojure-book"
+; nil
+
+
+; print all non-whiteline content, per line, of "a10.txt"
+(with-open [rdr (reader "a10.txt")]
+  (doseq [line (filter #(re-find #"\S" %) (line-seq rdr))] (prn line) ))
+; "total 12"
+; "drwxr-xr-x 3 root root 4096 Jun 29 15:19 ."
+; "drwxr-xr-x 3 root root 4096 Jun 29 13:54 .."
+; "-rw-r--r-- 1 root root    0 Jun 29 16:09 a10.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a11.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a12.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a13.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a14.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a15.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a16.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a17.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a18.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a19.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a1.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a20.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a2.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a3.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a4.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a5.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a6.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a7.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a8.txt"
+; "-rw-r--r-- 1 root root    0 Jun 29 15:19 a9.txt"
+; "drwxr-xr-x 2 root root 4096 Jun 22 12:10 official-book"
+; "/home/code/programming-clojure-book"
+; nil
+(map #(.getName %) (file-seq (File. ".")))
 
 
 
@@ -415,22 +563,28 @@ Random
 
 
 
+; create a clojure-loc function that counts the lines of Clojure code in a
+; directory tree, using a combination of sequence functions along the way:
+; reduce, for, count, and filter.
 
+(defn not-blank? [line] (if (re-find #"\S" line) true false))
 
+(defn not-svn? [filename] (not (.startsWith (.toString filename) ".svn") ))
 
+(defn clojure-source? [filename] (.endsWith (.toString filename) ".clj") )
 
+(defn count-non-empty-lines-in-file [filename]
+  (with-open [rdr (reader filename)]
+    (count (filter not-blank? (line-seq rdr)))
+  )
+)
 
-
-
-
-
-
-
-
-
-
-
-
+(defn count-clojure-lines-for-folder [folder]
+  (reduce
+    +
+    (for [filename (file-seq (File. folder))
+          :when (and (.isFile filename) (clojure-source? filename))]
+            (count-non-empty-lines-in-file filename))))
 
 
 
