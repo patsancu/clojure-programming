@@ -11,9 +11,6 @@
 
 (def letters ["A" "B" "C" "D" "E"])
 
-(interleave whole-numbers
-
-
 
 (def upperLetters (for [numero (range 26)] (str (char (+ 65 numero)))))
 
