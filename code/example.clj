@@ -587,6 +587,238 @@ Random
             (count-non-empty-lines-in-file filename))))
 
 
+; ##### seq-in XML
+(def path-to-xml "code/compositions.xml")
+
+(use '[clojure.xml :only (parse)])
+(parse (java.io.File. path-to-xml))
+; {:tag :compositions, :attrs nil, :content [{:tag :composition, :attrs {:composer "J. S. Bach"}, :content [{:tag :name, :attrs nil, :content ["The Art of the Fugue"]}]} {:tag :composition, :attrs {:composer "F. Chopin"}, :content [{:tag :name, :attrs nil, :content ["Fantaisie-Impromptu Op. 66"]}]} {:tag :composition, :attrs {:composer "W. A. Mozart"}, :content [{:tag :name, :attrs nil, :content ["Requiem"]}]}]}
+
+(defn extract-composers [path-to-file]
+  (for [x (xml-seq
+          (parse (java.io.File. path-to-xml)))
+        :when (= :composition (:tag x))]
+      (:composer (:attrs x))))
+
+
+(extract-composers "code/compositions.xml")
+; ("J. S. Bach" "F. Chopin" "W. A. Mozart")
+
+; ##### structure-specific functions
+;         lists
+(peek '(1 2 3))
+; 1
+(pop aseq)
+
+;         vectors
+
+; it's the last!!
+(peek [1 2 3])
+; 3
+(pop [1 2 3])
+; [1 2]
+
+([:a :b :c] 1)
+([:a :b :c] 0)
+
+([:a :b :c] 5)
+; Execution error (IndexOutOfBoundsException) at user/eval2220 (REPL:1).
+
+; assoc associates a new value with a particular index:
+(assoc [0 1 2 3 4] 2 :two)
+; [0 1 :two 3 4]
+
+(subvec [1 2 3 4 5 6] 3)
+; [4 5 6]
+
+(subvec [1 2 3 4 5 6] 1 3)
+; [2 3]
+
+(take 2 (drop 1 [1 2 3 4 5 6]))
+; (2 3)
+
+; But subvec is *much* faster for vectors
+
+; - - - - - maps
+(keys {:sundance "spaniel" :darwin "beagle"})
+; (:sundance :darwin)
+
+(vals {:sundance "spaniel" :darwin "beagle"})
+; ("spaniel" "beagle")
+
+(get {:sundance "spaniel" :darwin "beagle"} :sundance)
+; "spaniel"
+
+(get {:sundance "spaniel" :darwin "beagle"} :potato)
+; nil
+
+(get {:sundance "spaniel" :darwin "beagle"} :potato "value was missing")
+
+; Much simpler
+({:sundance "spaniel" :darwin "beagle"} :sundance)
+; "spaniel"
+
+({:sundance "spaniel" :darwin "beagle"} :potato)
+; nil
+
+(:sundance {:sundance "spaniel" :darwin "beagle"})
+; "spaniel"
+
+(:imagined {:sundance "spaniel" :darwin "beagle"})
+; nil
+
+
+(def score {:stu nil :joey 100})
+
+(:stu score)
+; nil
+(:whatever score)
+; nil
+(:whatever score :score-not-found)
+; :score-not-found
+(:stu score :score-not-found)
+; nil
+(:joey score)
+; 100
+
+
+
+(def song {:name "Agnus Dei"
+           :artist "Krzysztof Penderecki"
+           :album "Polish Requiem"
+           :genre "Classical" })
+
+
+(assoc song :kind "MPEG Audio File" )
+; {:name "Agnus Dei", :artist "Krzysztof Penderecki", :album "Polish Requiem", :genre "Classical", :kind "MPEG Audio File"}
+
+(dissoc song :genre)
+; {:name "Agnus Dei", :artist "Krzysztof Penderecki", :album "Polish Requiem"}
+
+(select-keys song [:name :artist])
+; {:name "Agnus Dei", :artist "Krzysztof Penderecki"}
+
+(merge song {:size 8188182 :time 32131280})
+; {:name "Agnus Dei", :artist "Krzysztof Penderecki", :album "Polish Requiem", :genre "Classical", :size 8188182, :time 32131280}
+
+; When two or more maps have the same key,
+; you can specify your own function for combining the values under the key.
+(def flinstones
+  (merge-with
+    concat
+    {:rubble ["Barney"], :flintstone ["Fred"]}
+    {:rubble ["Betty"], :flintstone ["Wilma"]}
+    {:rubble ["Bam-Bam"], :flintstone ["PebblePebbles"]}))
+
+
+; --------- maps
+
+(def languages #{"java" "c" "d" "clojure"})
+(def beverages #{"chai" "java" "pop"})
+
+(require '[clojure.set :as set])
+(set/union languages beverages)
+
+(set/intersection languages beverages)
+
+(set/difference languages beverages)
+
+(set/select #(= 1 (.length %)) languages)
+
+
+(def compositions
+  #{{:name "The Art of the Fugue" :composer "J. S. Bach"}
+    {:name "Musical Offering" :composer "J. S. Bach"}
+    {:name "Requiem" :composer "Giuseppe Verdi"}
+    {:name "Requiem" :composer "W. A. Mozart"}})
+(def composers
+  #{{:composer "J. S. Bach" :country "Germany"}
+    {:composer "W. A. Mozart" :country "Austria"}
+    {:composer "Giuseppe Verdi" :country "Italy"}})
+(def nations
+  #{{:nation "Germany" :language "German"}
+    {:nation "Austria" :language "German"}
+    {:nation "Italy" :language "Italian"}})
+
+(set/rename compositions {:name :title})
+; #{{:composer "Giuseppe Verdi", :title "Requiem"} {:composer "W. A. Mozart", :title "Requiem"} {:composer "J. S. Bach", :title "The Art of the Fugue"} {:composer "J. S. Bach", :title "Musical Offering"}}
+
+; Write a select expression that finds all the compositions whose title is "Requiem":
+(set/select #(= "Requiem" (% :name)) compositions)
+; #{{:name "Requiem", :composer "Giuseppe Verdi"} {:name "Requiem", :composer "W. A. Mozart"}}
+
+(set/project compositions [:name])
+; #{{:name "The Art of the Fugue"} {:name "Musical Offering"} {:name "Requiem"}}
+
+(pprint
+(for [m compositions
+      c composers]
+      (concat m c))
+)
+
+(pprint (set/join compositions composers))
+; #{{:composer "W. A. Mozart", :country "Austria", :name "Requiem"}
+  ; {:composer "J. S. Bach",
+   ; :country "Germany",
+   ; :name "Musical Offering"}
+  ; {:composer "Giuseppe Verdi", :country "Italy", :name "Requiem"}
+  ; {:composer "J. S. Bach",
+   ; :country "Germany",
+   ; :name "The Art of the Fugue"}}
+
+; Nation doesn't match country
+(pprint (set/join composers nations))
+; prints all combinations, sort of
+
+(pprint (set/join composers nations {:country :nation}))
+; #{{:composer "W. A. Mozart",
+   ; :country "Austria",
+   ; :nation "Austria",
+   ; :language "German"}
+  ; {:composer "J. S. Bach",
+   ; :country "Germany",
+   ; :nation "Germany",
+   ; :language "German"}
+  ; {:composer "Giuseppe Verdi",
+   ; :country "Italy",
+   ; :nation "Italy",
+   ; :language "Italian"}}
+
+; Set of countries that are home to the composer of a requiem
+(set/project
+  (set/join composers
+      (set/select #(= "Requiem" (% :name))
+      compositions))
+  [:country])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ; ==============================
