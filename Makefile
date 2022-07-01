@@ -8,6 +8,8 @@ DST_DIR="/home/code/programming-clojure-book"
 
 run:
 	docker run --name clojure-repl -it -v $(WORKDIR):$(DST_DIR) -v this-m2:/root/.m2 --rm $(image) bash -c "cd $(DST_DIR); lein repl"
+another:
+	docker exec -ti clojure-repl bash -c "cd $(DST_DIR); lein repl"
 run-linux:
 	docker run --name clojure-repl -it -v $(WORKDIR_LINUX):$(DST_DIR) -v this-m2:/root/.m2 --rm $(image) bash -c "cd $(DST_DIR); lein repl"
 rebuild:
