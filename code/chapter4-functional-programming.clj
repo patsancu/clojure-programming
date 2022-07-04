@@ -6,12 +6,12 @@
   (if (or (= n 0) (= n 1))
     1
     (+ (stack-consuming-fibonacci (- n 1)) (stack-consuming-fibonacci (- n 2)))
+    )
   )
-)
 
 (for [numero (range 10)]
   (stack-consuming-fibonacci numero)
-)
+  )
 
 ; This takes a few seconds
 (stack-consuming-fibonacci 35)
@@ -27,26 +27,26 @@
             (if (zero? n)
               current
               (fib next (+ current next) (dec n))))]
-        (fib 0N 1N n)
-))
+    (fib 0N 1N n)
+    ))
 
 ; No real recursion, basically it's a for loop in imperative
 (defn recur-fibo [n]
   (letfn [(fib
             [current next n]
             (if zero? n)
-              current
-              (recur next (+ current next) (dec n)))]
+            current
+            (recur next (+ current next) (dec n)))]
     (fib 0N 1N n)))
 
 
 ;  ------------------------ lazy sequences
 (defn lazy-seq-fibo
   ([]
-    (concat [0 1] (lazy-seq-fibo 0N 1N)))
+   (concat [0 1] (lazy-seq-fibo 0N 1N)))
   ([a b]
-    (let [n (+ a b)]
-      (lazy-seq (cons n (lazy-seq-fibo b n))))))
+   (let [n (+ a b)]
+     (lazy-seq (cons n (lazy-seq-fibo b n))))))
 
 (defn fibo []
   (map first (iterate (fn [[a b]] [b (+ a b)]) [0N 1N])))
@@ -73,9 +73,9 @@
     (if (empty? coll)
       cnt
       (recur (if (= :h (first coll) (second coll))
-          (inc cnt)
-          cnt)
-        (rest coll)))))
+               (inc cnt)
+               cnt)
+             (rest coll)))))
 
 ; So, let’s transform the sequence. When you see this:
 ; [:h :t :t :h :h :h]
@@ -93,8 +93,8 @@
   (cons [element1 element2] (by-pairs rest-of-list))
   [lista]
   (if empty? lista
-  [])
-)
+    [])
+  )
 
 ; copied from book
 ; overly complex, better approaches follow...
@@ -116,7 +116,7 @@
 
 
 (def ^{:doc "Count items matching a filter"}
-count-if (comp count filter))
+  count-if (comp count filter))
 
 (count-if odd? [1 2 3 4 5])
 ; 3
@@ -136,7 +136,7 @@ count-if (comp count filter))
 
 
 (def count-heads-pairs
-    (partial count-runs 2 #(= :h %)))
+  (partial count-runs 2 #(= :h %)))
 ; previous line is a nicer way of doing this:
 ; (fn [coll] (count-runs 2 #(= % :h) coll))
 
