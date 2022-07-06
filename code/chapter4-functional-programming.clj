@@ -141,3 +141,148 @@
 ; (fn [coll] (count-runs 2 #(= % :h) coll))
 
 (def count-heads-pairs (partial count-runs 2 #(= % :h)))
+
+
+(declare my-even? my-odd?)
+(defn my-odd? [n]
+    (if (= n 0)
+      false
+    (my-even? (dec n)))
+)
+(defn my-even? [n]
+    (if (= n 0)
+      true
+    (my-odd? (dec n)))
+)
+(my-even? 10)
+
+(defn parity [n]
+  (loop [n n par 0]
+    (if (= n 0)
+      par
+      (recur (dec n) (- 1 par)))))
+
+(defn my-even? [n]  (= 0 (parity n)) )
+(defn my-odd? [n]  (= 1 (parity n)) )
+
+
+;  ------------------------ Trampolining
+; A trampoline is a special-purpose solution to a specific problem. It requires
+; doctoring your original functions to return a different type to indicate recur-
+; sion. If one of the other techniques presented here provides a more elegant
+; implementation for a particular recursion, that is great. If not, you will be
+; happy to have trampoline in your box of tools.
+; You can convert these broken, stack-consuming implementations to use
+; trampoline using the same approach you used to convert tail-fibo: simply prepend
+; a # to any recursive tail calls:
+
+(trampoline + 3 2)
+; 5
+
+; Example only. Don't write code like this.
+(defn trampoline-fibo [n]
+  (let [fib (fn fib [f-2 f-1 current]
+              (let [f (+ f-2 f-1 )]
+                (if (= n current)
+                  f
+                  #(fib f-1 f (inc current)))))]
+    (cond
+      (= n 0) 0
+      (= n 1) 1
+      :else (fib 0N 1 2))))
+
+; feasible, but still takes some seconds
+(rem (trampoline trampoline-fibo 1000000) 1000)
+; 875N
+
+(declare my-odd? my-even?)
+(defn my-odd? [n]
+  (if (= n 0)
+    false
+    #(my-even? (dec n))))
+(defn my-even? [n]
+  (if (= n 0)
+    true
+    #(my-odd? (dec n))))
+
+(defn deeply-nested [n]
+  (loop [n n
+          result '(bottom)]
+    (if (= n 0)
+      result
+      (recur (dec n) (list result)))))
+
+
+; overly-literal port, do NOT use
+(declare replace-symbol replace-symbol-expression)
+(defn replace-symbol [coll oldsym newsym]
+  (if (empty? coll)
+    ()
+    (cons (replace-symbol-expression
+            (first coll) oldsym newsym)
+          (replace-symbol
+            (rest coll) oldsym newsym))))
+(defn replace-symbol-expression [symbol-expr oldsym newsym]
+  (if (symbol? symbol-expr)
+    (if (= symbol-expr oldsym)
+      newsym
+      symbol-expr)
+    (replace-symbol symbol-expr oldsym newsym)))
+
+
+
+(replace-symbol (deeply-nested 1000)  'bottom 'deepa)
+; (((((((((((((((((((((((((#)))))))))))))))))))))))))
+(replace-symbol (deeply-nested 100000)  'bottom 'deepa)
+; Execution error (StackOverflowError) at user/replace-symbol (REPL:2).
+
+
+(defn- coll-or-scalar [x & _] (if (coll? x) :collection :scalar ))
+(defmulti replace-symbol coll-or-scalar)
+(defmethod replace-symbol :collection [coll oldsym newsym]
+  (lazy-seq
+    (when (seq coll)
+      (cons (replace-symbol (first coll) oldsym newsym)
+        (replace-symbol (rest coll) oldsym newsym)))))
+
+(defmethod replace-symbol :scalar [obj oldsym newsym]
+  (if (= obj oldsym) newsym obj))
+
+; hofstadter male and female sequences
+
+(declare m f)
+(defn m [n]
+  (if (zero? n)
+    0
+    (- n (f (m (dec n))))))
+(defn f [n]
+  (if (zero? n)
+    1
+    (- n (m (f (dec n))))))
+
+; takes already some time
+(time (f 150))
+; "Elapsed time: 3332.139946 msecs"
+; 93
+
+
+; if we rebind to a memoized function of themselves
+(def m (memoize m))
+(def f (memoize f))
+
+; now it returns very fast
+(time (m 200))
+; "Elapsed time: 1.650714 msecs"
+; 124
+
+; The final trick is to guarantee that the cache is built from the ground up by
+; exposing sequences, instead of functions. Create m-seq and f-seq by mapping
+; m and f over the whole numbers:
+(def m-seq (map m (iterate inc 0)))
+(def f-seq (map f (iterate inc 0)))
+
+(nth m-seq 250)
+; 155
+(time (nth m-seq 10000))
+; "Elapsed time: 103.465194 msecs"
+; 6180
