@@ -173,3 +173,61 @@ simbolo
 
 (add-message-with-backup (user.Message. "Adele" "Rolling in the deep"))
 
+
+; ------------------ Managing Per-Thread State with Vars
+(def ^:dynamic foo 10)
+
+(.start (Thread. (fn [] (println foo))))
+; nil
+; 10
+
+(binding [foo 42] foo)
+
+
+(defn print-foo [] (println foo))
+
+(binding [foo "bound foo"] (print-foo))
+; bound foo
+; nil
+
+(let [foo "let foo"] (print-foo))
+; 10
+; nil
+
+(defn ^:dynamic slow-double [n]
+  (Thread/sleep 100)
+  (* n 2))
+
+(defn calls-slow-double []
+  (map slow-double [1 2 1 2 1 2]))
+
+
+(time (dorun (calls-slow-double )))
+; "Elapsed time: 602.068528 msecs"
+; nil
+
+(defn demo-memoize []
+  (time
+    (dorun
+      (binding [slow-double (memoize slow-double)]
+        (calls-slow-double)))))
+
+(demo-memoize)
+; "Elapsed time: 200.444706 msecs"
+
+; Just for my testing
+; (defn demo-memoize []
+;    (time
+;     (dorun
+;       (binding [slow-double println]
+;         (calls-slow-double)))))
+
+(demo-memoize)
+; 1
+; 2
+; 1
+; 2
+; 1
+; 2
+; "Elapsed time: 5.612006 msecs"
+; nil
