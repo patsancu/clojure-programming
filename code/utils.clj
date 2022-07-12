@@ -29,3 +29,9 @@
 ; ((((((bottom))))))
 (deeply-nested 100)
 ; (((((((((((((((((((((((((#)))))))))))))))))))))))))
+
+
+; Sleep for 100 milliseconds
+(defn ^:dynamic slow-double [n]
+  (Thread/sleep 100)
+  (* n 2))
