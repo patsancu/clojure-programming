@@ -58,6 +58,12 @@
   (str a b c d (vector? d) (list? d)))
 (patata "first" "second" "third" "fourth" "fifth")
 
+(defn makemake [{[first-element second-element :as whole-list] :body} ]
+  (println first-element second-element whole-list))
+(makemake {:body [1 2 3 4]})
+
+  (= first-element apple))
+
 ; --------------------
 ; anonymous functions
 ; --------------------
